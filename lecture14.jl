@@ -1,27 +1,21 @@
+
+
 using Random
 
-#ReLU activation
+# Activation functions
+relu(x) = max(0, x)
+drelu(x) = x > 0 ? 1.0 : 0.0
 
-relu(x)=max.(0, x)
-drelu(x)=x>0 ? 1 : 0.0
-
-relu(drelu(-8))
-relu(drelu(8))
-
-# Inputs
-X = [1.0, 2.0, 3.0, 4.0]
+# Inputs (1 sample, 4 features)
 
 
-Random.seed!(89)
+X = [1.0 2.0 3.0 4.0]   # shape (1,4) row vector
 
-W = randn(3, 4)
+# Random initialization
+Random.seed!(42)
+W = randn(4, 3)   # shape (4,3) weights
+B = randn(1, 3)   # shape (1,3) biases
 
-
-B = randn(3)
-
-
-W[2,3]
-B[3]
 
 
 function forward_pass(X, W, B)
@@ -34,9 +28,6 @@ function forward_pass(X, W, B)
     return z,a,Y,L
 
 end
-
-
-
 
 z,a,Y,L=forward_pass(X,W,B)
 println("Initial Loss: ", L)
@@ -98,3 +89,24 @@ losses
 for i in 1:length(losses)
     println("the loss is $i : is $losses[i]")
 end
+# ---------------------------------------------*****************----------------------------
+# Batch of 3 samples
+X_batch = [1.0 2.0 3.0 4.0;
+           0.5 1.0 1.5 2.0;
+           2.0 0.5 1.0 3.0]   # shape (3,4)
+
+Z_batch = X_batch * W .+ B   # shape (3,3)
+A_batch = relu.(Z_batch)
+Y_batch = sum(A_batch, dims=2)   # sum across neurons per sample
+L_batch = sum(Y_batch.^2)        # total batch loss
+
+# Backprop for batch
+dL_dY = 2 .* Y_batch                  # shape (3,1)
+dA_dZ = drelu.(Z_batch)               # shape (3,3)
+dL_dZ = dL_dY .* dA_dZ                # shape (3,3)
+
+dW_batch = X_batch' * dL_dZ           # (4,3)
+dB_batch = sum(dL_dZ, dims=1)         # sum across batch → (1,3)
+
+println("Batch weight gradients:\n", dW_batch)
+println("Batch bias gradients:\n", dB_batch)
